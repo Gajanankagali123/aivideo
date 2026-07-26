@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Motion Studio — Turn Your Ideas Into Stunning Videos With AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --bg:#07070a;
+  --bg-2:#0a0a0e;
+  --panel:#101015;
+  --panel-2:#15151b;
+  --panel-3:#1b1b23;
+  --border:rgba(255,255,255,.08);
+  --border-2:rgba(255,255,255,.14);
+  --red:#ff3d63;
+  --red-2:#ff6b8a;
+  --purple:#8b5cf6;
+  --purple-2:#a78bfa;
+  --blue:#4d8dff;
+  --ink:#f4f4f7;
+  --ink-dim:#9c9ca8;
+  --ink-faint:#5c5c68;
+  --grad: linear-gradient(115deg, var(--red) 0%, var(--purple) 55%, var(--blue) 100%);
+  --grad-soft: linear-gradient(115deg, rgba(255,61,99,.16) 0%, rgba(139,92,246,.16) 55%, rgba(77,141,255,.16) 100%);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Inter',sans-serif;
+  margin:0;
+  overflow-x:hidden;
+}
+h1,h2,h3,h4,.font-display{font-family:'Space Grotesk',sans-serif;}
+.font-mono{font-family:'JetBrains Mono',monospace;}
+::selection{background:var(--red); color:#fff;}
+::-webkit-scrollbar{width:10px; height:10px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--panel-3); border-radius:8px;}
+::-webkit-scrollbar-thumb:hover{background:#2a2a34;}
+:focus-visible{outline:2px solid var(--purple-2); outline-offset:2px; border-radius:4px;}
+
+/* ============ BACKDROP TEXTURE ============ */
+.grain-bg{position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.4;
+  background-image: radial-gradient(circle at 15% 20%, rgba(255,61,99,.10), transparent 40%),
+                     radial-gradient(circle at 85% 15%, rgba(139,92,246,.12), transparent 45%),
+                     radial-gradient(circle at 50% 85%, rgba(77,141,255,.08), transparent 45%);
+}
+.noise{position:fixed; inset:0; z-index:1; pointer-events:none; opacity:.035; mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* ============ GLASS / PANELS ============ */
+.glass{
+  background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.015));
+  border:1px solid var(--border);
+  backdrop-filter: blur(20px);
+  border-radius:20px;
+}
+.glass-strong{
+  background:rgba(16,16,21,.7);
+  border:1px solid var(--border-2);
+  backdrop-filter: blur(24px);
+  border-radius:20px;
+}
+.glow-border{position:relative;}
+.glow-border::before{
+  content:''; position:absolute; inset:-1px; border-radius:inherit; padding:1px;
+  background:var(--grad); opacity:.35;
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events:none; transition:opacity .3s;
+}
+.glow-border:hover::before{opacity:.75;}
+
+/* ============ BUTTONS ============ */
+.btn-primary{
+  background:var(--grad); color:#fff; font-weight:600; border:none; border-radius:12px;
+  padding:.85rem 1.6rem; font-size:.9rem; cursor:pointer; letter-spacing:.01em;
+  box-shadow:0 8px 24px -8px rgba(255,61,99,.45);
+  transition:transform .2s ease, box-shadow .2s ease, filter .2s ease;
+}
+.btn-primary:hover{transform:translateY(-2px); box-shadow:0 14px 30px -8px rgba(255,61,99,.6); filter:brightness(1.08);}
+.btn-primary:active{transform:translateY(0);}
+.btn-ghost{
+  background:rgba(255,255,255,.04); color:var(--ink); border:1px solid var(--border-2); border-radius:12px;
+  padding:.85rem 1.6rem; font-size:.9rem; font-weight:600; cursor:pointer; transition:all .2s ease;
+}
+.btn-ghost:hover{background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.25);}
+.btn-sm{padding:.5rem 1rem; font-size:.8rem; border-radius:9px;}
+.btn-icon{
+  width:38px; height:38px; display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:10px; cursor:pointer; transition:all .2s;
+  color:var(--ink-dim);
+}
+.btn-icon:hover{background:rgba(255,255,255,.08); color:var(--ink);}
+
+/* ============ NAV ============ */
+#topnav{
+  position:fixed; top:0; left:0; right:0; z-index:50;
+  padding:16px 5%; display:flex; align-items:center; justify-content:space-between;
+  transition:background .3s ease, border-color .3s ease, backdrop-filter .3s ease;
+  border-bottom:1px solid transparent;
+}
+#topnav.scrolled{ background:rgba(7,7,10,.75); backdrop-filter:blur(16px); border-bottom-color:var(--border);}
+.logo-mark{
+  width:36px; height:36px; border-radius:10px; background:var(--grad);
+  display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;
+}
+.logo-mark::after{content:''; position:absolute; inset:0; background:linear-gradient(115deg, transparent 30%, rgba(255,255,255,.5) 50%, transparent 70%); animation:sheen 3.5s infinite;}
+@keyframes sheen{0%{transform:translateX(-100%);}60%,100%{transform:translateX(100%);}}
+.nav-link{color:var(--ink-dim); font-size:.88rem; font-weight:500; cursor:pointer; transition:color .2s;}
+.nav-link:hover{color:var(--ink);}
+
+/* ============ HERO SIGNATURE: SCAN CONSOLE ============ */
+.hero-console{position:relative; border-radius:22px; overflow:hidden;}
+.scan-frame{
+  position:relative; aspect-ratio:16/9; border-radius:14px; overflow:hidden;
+  background:linear-gradient(160deg,#0c0c11,#151520 55%,#0c0c11);
+}
+.scan-frame .frame-gradient{
+  position:absolute; inset:0;
+  background:conic-gradient(from 210deg at 30% 40%, rgba(255,61,99,.35), rgba(139,92,246,.3) 35%, rgba(77,141,255,.28) 60%, rgba(255,61,99,.35) 100%);
+  filter:blur(40px); opacity:.55; animation:drift 12s ease-in-out infinite alternate;
+}
+@keyframes drift{0%{transform:scale(1) translate(0,0);}100%{transform:scale(1.15) translate(3%,-4%);}}
+.scan-line{
+  position:absolute; left:0; right:0; height:2px; top:0;
+  background:linear-gradient(90deg, transparent, var(--red-2), var(--purple-2), var(--blue), transparent);
+  box-shadow:0 0 18px 3px rgba(255,61,99,.6);
+  animation:scan 3.2s cubic-bezier(.45,0,.55,1) infinite;
+}
+@keyframes scan{0%{top:0; opacity:0;}8%{opacity:1;}92%{opacity:1;}100%{top:100%; opacity:0;}}
+.scan-grid{position:absolute; inset:0; background-image:linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px); background-size:32px 32px;}
+.stage-label{font-family:'JetBrains Mono',monospace; font-size:.7rem; letter-spacing:.14em; color:var(--ink-dim);}
+.stage-dot{width:6px; height:6px; border-radius:50%; background:var(--ink-faint);}
+.stage-dot.active{background:var(--red-2); box-shadow:0 0 8px var(--red);}
+
+/* ============ FEATURE / TEMPLATE CARDS ============ */
+.feat-card{
+  background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:26px;
+  transition:transform .25s ease, border-color .25s ease, background .25s ease;
+}
+.feat-card:hover{transform:translateY(-4px); border-color:rgba(255,61,99,.35); background:var(--panel-2);}
+.icon-chip{
+  width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+  background:var(--grad-soft); border:1px solid var(--border-2);
+}
+
+/* ============ APP SHELL ============ */
+#app-shell{display:none; min-height:100vh;}
+#sidebar{
+  width:236px; flex-shrink:0; background:var(--bg-2); border-right:1px solid var(--border);
+  height:100vh; position:sticky; top:0; display:flex; flex-direction:column; padding:18px 14px; z-index:40;
+}
+.side-link{
+  display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:11px; color:var(--ink-dim);
+  font-size:.86rem; font-weight:500; cursor:pointer; transition:all .18s; margin-bottom:2px; position:relative;
+}
+.side-link:hover{background:rgba(255,255,255,.04); color:var(--ink);}
+.side-link.active{background:var(--grad-soft); color:var(--ink); border:1px solid rgba(255,61,99,.25);}
+.side-link.active svg{color:var(--red-2);}
+#topbar{
+  height:66px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;
+  padding:0 26px; position:sticky; top:0; background:rgba(7,7,10,.85); backdrop-filter:blur(14px); z-index:30;
+}
+.credit-pill{
+  display:flex; align-items:center; gap:8px; background:var(--panel-2); border:1px solid var(--border-2);
+  padding:7px 14px; border-radius:100px; font-size:.8rem; font-weight:600; font-family:'JetBrains Mono',monospace;
+}
+.sub-view{display:none;}
+.sub-view.active{display:block;}
+
+/* ============ TABS ============ */
+.tab-btn{
+  padding:10px 18px; border-radius:11px; font-size:.85rem; font-weight:600; color:var(--ink-dim);
+  cursor:pointer; transition:all .2s; border:1px solid transparent; display:flex; align-items:center; gap:8px;
+}
+.tab-btn.active{background:var(--panel-3); color:var(--ink); border-color:var(--border-2);}
+.tab-btn:hover:not(.active){color:var(--ink);}
+
+/* ============ FORM ELEMENTS ============ */
+.field-label{font-size:.78rem; font-weight:600; color:var(--ink-dim); margin-bottom:8px; display:block; letter-spacing:.01em;}
+.select-chip{
+  background:var(--panel-2); border:1px solid var(--border-2); color:var(--ink); border-radius:10px;
+  padding:9px 12px; font-size:.83rem; cursor:pointer; width:100%; appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6' fill='%239c9ca8'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 12px center;
+}
+.option-pill{
+  padding:9px 14px; border-radius:10px; font-size:.82rem; font-weight:500; color:var(--ink-dim);
+  border:1px solid var(--border-2); cursor:pointer; transition:all .18s; text-align:center; background:var(--panel-2);
+}
+.option-pill.active{background:var(--grad-soft); border-color:rgba(255,61,99,.5); color:var(--ink);}
+.option-pill:hover:not(.active){border-color:var(--border-2); color:var(--ink);}
+textarea, input[type=text], input[type=email], input[type=password]{
+  background:var(--panel-2); border:1px solid var(--border-2); color:var(--ink); border-radius:12px;
+  padding:12px 14px; font-size:.88rem; width:100%; font-family:'Inter',sans-serif;
+}
+textarea:focus, input:focus{outline:none; border-color:rgba(255,61,99,.5); box-shadow:0 0 0 3px rgba(255,61,99,.12);}
+textarea::placeholder, input::placeholder{color:var(--ink-faint);}
+
+/* ============ PROJECT / TEMPLATE CARDS ============ */
+.thumb{
+  aspect-ratio:16/9; border-radius:12px; position:relative; overflow:hidden;
+  background:linear-gradient(150deg,#141420,#1c1c28);
+}
+.thumb .tgrad{position:absolute; inset:0; opacity:.7;}
+.thumb .play-badge{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .2s;
+  background:rgba(0,0,0,.35);
+}
+.thumb-wrap:hover .play-badge{opacity:1;}
+.status-badge{font-size:.68rem; font-weight:700; padding:3px 9px; border-radius:100px; letter-spacing:.03em;}
+
+/* ============ GENERATION OVERLAY ============ */
+#gen-overlay{
+  position:fixed; inset:0; z-index:100; background:rgba(5,5,7,.9); backdrop-filter:blur(10px);
+  display:none; align-items:center; justify-content:center; padding:20px;
+}
+.gen-stage{display:flex; align-items:center; gap:10px; padding:8px 0; opacity:.35; transition:opacity .3s;}
+.gen-stage.active{opacity:1;}
+.gen-stage.done{opacity:.6;}
+.gen-check{width:18px; height:18px; border-radius:50%; border:1.5px solid var(--ink-faint); flex-shrink:0; display:flex; align-items:center; justify-content:center;}
+.gen-stage.active .gen-check{border-color:var(--red-2); box-shadow:0 0 10px rgba(255,61,99,.5);}
+.gen-stage.done .gen-check{border-color:var(--purple-2); background:var(--purple-2);}
+.progress-track{height:6px; border-radius:100px; background:var(--panel-3); overflow:hidden;}
+.progress-fill{height:100%; background:var(--grad); border-radius:100px; transition:width .4s ease; width:0%;}
+
+/* ============ MODALS ============ */
+.modal-backdrop{position:fixed; inset:0; z-index:90; background:rgba(5,5,7,.75); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; padding:20px;}
+
+/* ============ MISC ANIM ============ */
+@keyframes floaty{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+.floaty{animation:floaty 5s ease-in-out infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.spin{animation:spin 1.4s linear infinite;}
+@keyframes pulse-soft{0%,100%{opacity:1;}50%{opacity:.5;}}
+.pulse-soft{animation:pulse-soft 2s ease-in-out infinite;}
+.bar{width:3px; border-radius:3px; background:var(--grad); animation:eq 1.1s ease-in-out infinite;}
+@keyframes eq{0%,100%{height:6px;}50%{height:22px;}}
+
+.reveal{opacity:0; transform:translateY(24px); transition:opacity .7s ease, transform .7s ease;}
+.reveal.in{opacity:1; transform:translateY(0);}
+
+@media (max-width:900px){
+  #sidebar{position:fixed; left:-260px; top:0; z-index:60; transition:left .25s ease; box-shadow:20px 0 60px rgba(0,0,0,.5);}
+  #sidebar.open{left:0;}
+  #mobile-nav{display:flex !important;}
+}
+#mobile-nav{
+  display:none; position:fixed; bottom:0; left:0; right:0; z-index:45; background:rgba(10,10,14,.92);
+  backdrop-filter:blur(16px); border-top:1px solid var(--border); padding:8px 6px; align-items:center; justify-content:space-around;
+}
+</style>
+</head>
+<body>
+
+<div class="grain-bg"></div>
+<div class="noise"></div>
+
+<!-- ============================================================ TOP NAV ============================================================ -->
+<nav id="topnav">
+  <div class="flex items-center gap-3 cursor-pointer" onclick="showLanding()">
+    <div class="logo-mark">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 3l14 9-14 9V3z" fill="white"/></svg>
+    </div>
+    <span class="font-display font-semibold text-[1.05rem] tracking-tight">AI Motion Studio</span>
+  </div>
+  <div class="hidden md:flex items-center gap-8">
+    <span class="nav-link" onclick="scrollToSection('features')">Features</span>
+    <span class="nav-link" onclick="scrollToSection('templates-preview')">Templates</span>
+    <span class="nav-link" onclick="scrollToSection('pricing')">Pricing</span>
+    <span class="nav-link" onclick="openAuth('login')">Log in</span>
+  </div>
+  <div class="flex items-center gap-3">
+    <button class="btn-ghost btn-sm hidden sm:block" onclick="openAuth('login')">Log in</button>
+    <button class="btn-primary btn-sm" onclick="openAuth('signup')">Create your video</button>
+  </div>
+</nav>
+
+<!-- ============================================================ LANDING PAGE ============================================================ -->
+<main id="view-landing">
+
+<!-- HERO -->
+<section class="relative px-[5%] pt-[150px] pb-24 max-w-[1400px] mx-auto">
+  <div class="grid lg:grid-cols-2 gap-14 items-center">
+    <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-white/10 mb-7">
+        <span class="w-1.5 h-1.5 rounded-full bg-[var(--red-2)] pulse-soft"></span>
+        <span class="text-xs font-mono text-[var(--ink-dim)] tracking-wide">GENERATIVE VIDEO ENGINE — LIVE</span>
+      </div>
+      <h1 class="font-display text-[3rem] sm:text-[3.6rem] leading-[1.03] font-semibold tracking-tight">
+        Create videos with<br>the <span style="background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent;">power of AI</span>
+      </h1>
+      <p class="text-[var(--ink-dim)] text-lg mt-6 max-w-[480px] leading-relaxed">
+        Transform your ideas, text, images, and scripts into stunning AI-generated videos in minutes. No cameras, no editors, no timeline experience required.
+      </p>
+      <div class="flex flex-wrap gap-4 mt-9">
+        <button class="btn-primary" onclick="openAuth('signup')">Create your video</button>
+        <button class="btn-ghost" onclick="scrollToSection('features')">Explore features</button>
+      </div>
+      <div class="flex items-center gap-8 mt-12">
+        <div><div class="font-display text-2xl font-semibold">2.4M+</div><div class="text-xs text-[var(--ink-faint)] mt-1">Videos generated</div></div>
+        <div class="w-px h-9 bg-white/10"></div>
+        <div><div class="font-display text-2xl font-semibold">180+</div><div class="text-xs text-[var(--ink-faint)] mt-1">Countries reached</div></div>
+        <div class="w-px h-9 bg-white/10"></div>
+        <div><div class="font-display text-2xl font-semibold">4.9/5</div><div class="text-xs text-[var(--ink-faint)] mt-1">Creator rating</div></div>
+      </div>
+    </div>
+
+    <!-- SIGNATURE HERO CONSOLE -->
+    <div class="hero-console glass-strong p-5 floaty">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f57]"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-[#febc2e]"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-[#28c840]"></span>
+        </div>
+        <span class="font-mono text-[.68rem] text-[var(--ink-faint)]">create-video.studio</span>
+      </div>
+      <div class="scan-frame mb-4">
+        <div class="frame-gradient"></div>
+        <div class="scan-grid"></div>
+        <div class="scan-line"></div>
+        <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+          <span id="hero-stage" class="stage-label bg-black/40 px-2.5 py-1.5 rounded-lg">ANALYZING PROMPT</span>
+          <div class="flex items-center gap-1.5 bg-black/40 px-2.5 py-1.5 rounded-lg">
+            <div class="bar" style="animation-delay:0s"></div><div class="bar" style="animation-delay:.15s"></div><div class="bar" style="animation-delay:.3s"></div><div class="bar" style="animation-delay:.45s"></div>
+          </div>
+        </div>
+      </div>
+      <div class="glass p-3 mb-3">
+        <p class="text-[.8rem] text-[var(--ink-dim)] leading-snug">"A cinematic drone shot flying over the Western Ghats at sunrise, dramatic clouds, golden light, ultra-realistic camera movement."</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="option-pill active !py-1.5 !px-3 text-[.72rem]">Cinematic</span>
+        <span class="option-pill !py-1.5 !px-3 text-[.72rem]">16:9</span>
+        <span class="option-pill !py-1.5 !px-3 text-[.72rem]">4K</span>
+        <span class="ml-auto font-mono text-[.72rem] text-[var(--ink-faint)]">32 credits</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LOGOS STRIP -->
+<section class="px-[5%] py-10 border-y border-white/5">
+  <div class="max-w-[1400px] mx-auto flex flex-wrap items-center justify-between gap-8 opacity-50 text-sm font-mono">
+    <span>TRUSTED BY CREATORS AT</span>
+    <span>NORTHWIND</span><span>VERTEX MEDIA</span><span>ORBIT STUDIOS</span><span>HALO BRANDS</span><span>LUMEN&nbsp;&&nbsp;CO</span>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" class="px-[5%] py-28 max-w-[1400px] mx-auto">
+  <div class="max-w-xl mb-14 reveal">
+    <span class="font-mono text-xs text-[var(--red-2)] tracking-widest">CAPABILITIES</span>
+    <h2 class="font-display text-4xl font-semibold mt-3 tracking-tight">One studio, every way to make a video</h2>
+    <p class="text-[var(--ink-dim)] mt-4">Start from a sentence, a photo, or a full script — the engine adapts the workflow to what you already have.</p>
+  </div>
+  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+    <div class="feat-card reveal" data-target="app" data-view="create-video" data-tab="text">
+      <div class="icon-chip mb-5"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red-2)" stroke-width="1.8"><path d="M4 6h16M4 12h10M4 18h13"/></svg></div>
+      <h3 class="font-display text-lg font-semibold mb-2">Text to Video</h3>
+      <p class="text-sm text-[var(--ink-dim)] leading-relaxed">Describe a shot and the engine directs, frames, and renders it — camera moves, lighting, and style included.</p>
+    </div>
+    <div class="feat-card reveal" data-target="app" data-view="create-video" data-tab="image">
+      <div class="icon-chip mb-5"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--purple-2)" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-9 9"/></svg></div>
+      <h3 class="font-display text-lg font-semibold mb-2">Image to Video</h3>
+      <p class="text-sm text-[var(--ink-dim)] leading-relaxed">Bring a still photo to life with realistic motion, camera drift, and environmental animation.</p>
+    </div>
+    <div class="feat-card reveal" data-target="app" data-view="create-video" data-tab="script">
+      <div class="icon-chip mb-5"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8"><path d="M14 3v5h5M6 3h8l6 6v12H6z"/></svg></div>
+      <h3 class="font-display text-lg font-semibold mb-2">Script to Video</h3>
+      <p class="text-sm text-[var(--ink-dim)] leading-relaxed">Paste a full script — scenes, voiceover, captions, and music are assembled automatically.</p>
+    </div>
+    <div class="feat-card reveal" data-target="app" data-view="avatars">
+      <div class="icon-chip mb-5"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red-2)" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
+      <h3 class="font-display text-lg font-semibold mb-2">AI Avatars</h3>
+      <p class="text-sm text-[var(--ink-dim)] leading-relaxed">Choose a presenter or upload your own likeness and have it speak any script, in any language.</p>
+    </div>
+    <div class="feat-card reveal" data-target="app" data-view="voice">
+      <div class="icon-chip mb-5"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--purple-2)" stroke-width="1.8"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v4"/></svg></div>
+      <h3 class="font-display text-lg font-semibold mb-2">AI Voice Studio</h3>
+      <p class="text-sm text-[var(--ink-dim)] leading-relaxed">Generate natural voiceover in dozens of voices, accents, and languages — tune pitch, pace, and emotion.</p>
+    </div>
+    <div class="feat-card reveal" data-target="app" data-view="editor">
+      <div class="icon-chip mb-5"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
+      <h3 class="font-display text-lg font-semibold mb-2">Timeline Editor</h3>
+      <p class="text-sm text-[var(--ink-dim)] leading-relaxed">Fine-tune scenes, text, transitions, and sound in a full browser-based editor — no download required.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TEMPLATES PREVIEW -->
+<section id="templates-preview" class="px-[5%] py-24 max-w-[1400px] mx-auto">
+  <div class="flex items-end justify-between mb-10 reveal">
+    <div>
+      <span class="font-mono text-xs text-[var(--purple-2)] tracking-widest">TEMPLATE LIBRARY</span>
+      <h2 class="font-display text-4xl font-semibold mt-3 tracking-tight">Start from something proven</h2>
+    </div>
+    <button class="btn-ghost btn-sm hidden sm:block" onclick="openAuth('signup')">Browse all templates</button>
+  </div>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5" id="landing-template-grid"></div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing" class="px-[5%] py-28 max-w-[1400px] mx-auto">
+  <div class="text-center max-w-xl mx-auto mb-16 reveal">
+    <span class="font-mono text-xs text-[var(--blue)] tracking-widest">PRICING</span>
+    <h2 class="font-display text-4xl font-semibold mt-3 tracking-tight">Pick your rendering power</h2>
+    <p class="text-[var(--ink-dim)] mt-4">Start free. Upgrade when your projects need more credits, resolution, or speed.</p>
+  </div>
+  <div class="grid lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+
+    <div class="glass p-8 reveal">
+      <h3 class="font-display text-xl font-semibold">Free</h3>
+      <p class="text-sm text-[var(--ink-dim)] mt-2">Try the studio, no card required.</p>
+      <div class="mt-6 mb-6"><span class="font-display text-4xl font-semibold">$0</span><span class="text-[var(--ink-faint)] text-sm">/month</span></div>
+      <button class="btn-ghost w-full mb-7" onclick="openAuth('signup')">Get started</button>
+      <ul class="space-y-3 text-sm text-[var(--ink-dim)]">
+        <li class="flex gap-2">✓ 15 credits / month</li>
+        <li class="flex gap-2">✓ 720p export</li>
+        <li class="flex gap-2">✓ Watermarked videos</li>
+        <li class="flex gap-2">✓ Limited templates</li>
+      </ul>
+    </div>
+
+    <div class="glass-strong glow-border p-8 relative reveal" style="transform:scale(1.03);">
+      <span class="absolute -top-3 right-8 text-[.68rem] font-bold px-3 py-1 rounded-full" style="background:var(--grad); color:#fff;">MOST POPULAR</span>
+      <h3 class="font-display text-xl font-semibold">Creator</h3>
+      <p class="text-sm text-[var(--ink-dim)] mt-2">For consistent, watermark-free output.</p>
+      <div class="mt-6 mb-6"><span class="font-display text-4xl font-semibold">$29</span><span class="text-[var(--ink-faint)] text-sm">/month</span></div>
+      <button class="btn-primary w-full mb-7" onclick="openAuth('signup')">Start creating</button>
+      <ul class="space-y-3 text-sm text-[var(--ink-dim)]">
+        <li class="flex gap-2">✓ 300 credits / month</li>
+        <li class="flex gap-2">✓ 1080p export</li>
+        <li class="flex gap-2">✓ No watermark</li>
+        <li class="flex gap-2">✓ Premium AI models</li>
+        <li class="flex gap-2">✓ AI voice generation</li>
+      </ul>
+    </div>
+
+    <div class="glass p-8 reveal">
+      <h3 class="font-display text-xl font-semibold">Pro</h3>
+      <p class="text-sm text-[var(--ink-dim)] mt-2">Commercial-grade output at scale.</p>
+      <div class="mt-6 mb-6"><span class="font-display text-4xl font-semibold">$79</span><span class="text-[var(--ink-faint)] text-sm">/month</span></div>
+      <button class="btn-ghost w-full mb-7" onclick="openAuth('signup')">Go Pro</button>
+      <ul class="space-y-3 text-sm text-[var(--ink-dim)]">
+        <li class="flex gap-2">✓ 1000 credits / month</li>
+        <li class="flex gap-2">✓ 4K export</li>
+        <li class="flex gap-2">✓ Priority rendering</li>
+        <li class="flex gap-2">✓ Advanced AI models</li>
+        <li class="flex gap-2">✓ Commercial usage rights</li>
+        <li class="flex gap-2">✓ Unlimited projects</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="px-[5%] py-14 border-t border-white/8 mt-10">
+  <div class="max-w-[1400px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+    <div class="flex items-center gap-3">
+      <div class="logo-mark" style="width:30px;height:30px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 3l14 9-14 9V3z" fill="white"/></svg></div>
+      <span class="font-display font-semibold">AI Motion Studio</span>
+    </div>
+    <p class="text-xs text-[var(--ink-faint)]">© 2026 AI Motion Studio. All footage generated, none of it filmed.</p>
+  </div>
+</footer>
+</main>
+
+<!-- ============================================================ APP SHELL (DASHBOARD) ============================================================ -->
+<div id="app-shell" class="flex">
+  <aside id="sidebar">
+    <div class="flex items-center gap-2.5 px-2 mb-8 mt-1">
+      <div class="logo-mark" style="width:30px;height:30px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 3l14 9-14 9V3z" fill="white"/></svg></div>
+      <span class="font-display font-semibold text-[.95rem]">AI Motion Studio</span>
+    </div>
+    <nav class="flex-1 space-y-1" id="sidebar-nav">
+      <div class="side-link" data-view="dashboard"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</div>
+      <div class="side-link" data-view="create-video"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Create Video</div>
+      <div class="side-link" data-view="projects"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>My Projects</div>
+      <div class="side-link" data-view="templates"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Templates</div>
+      <div class="side-link" data-view="avatars"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>AI Avatars</div>
+      <div class="side-link" data-view="voice"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v4"/></svg>Voice Studio</div>
+      <div class="side-link" data-view="assets"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15V6a2 2 0 00-2-2H5a2 2 0 00-2 2v9m18 0H3m18 0l-2.5 4.5a1 1 0 01-.87.5H8.37a1 1 0 01-.87-.5L5 15"/></svg>Assets</div>
+      <div class="side-link" data-view="settings"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-1.8-.3 1.6 1.6 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.6 1.6 0 00-1-1.5 1.6 1.6 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00.3-1.8 1.6 1.6 0 00-1.5-1H3a2 2 0 110-4h.1a1.6 1.6 0 001.5-1 1.6 1.6 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H9a1.6 1.6 0 001-1.5V3a2 2 0 114 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8V9a1.6 1.6 0 001.5 1H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z"/></svg>Settings</div>
+    </nav>
+    <div class="glass p-4 mt-4">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-semibold text-[var(--ink-dim)]" id="sidebar-plan-name">Free Plan</span>
+        <span class="text-xs font-mono text-[var(--red-2)]" id="sidebar-credits-left">— left</span>
+      </div>
+      <div class="progress-track mb-3"><div class="progress-fill" id="sidebar-credit-bar" style="width:0%;"></div></div>
+      <button class="btn-primary btn-sm w-full" onclick="showLanding(); scrollToSection('pricing');">Upgrade plan</button>
+    </div>
+  </aside>
+
+  <div class="flex-1 min-w-0">
+    <div id="topbar">
+      <div class="flex items-center gap-4 flex-1">
+        <button class="btn-icon md:hidden" onclick="document.getElementById('sidebar').classList.toggle('open')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="relative max-w-xs w-full hidden sm:block">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" placeholder="Search projects, templates..." style="padding-left:34px;" class="!text-sm">
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="credit-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="var(--red-2)"><path d="M12 2l2.4 7.2H22l-6 4.4 2.3 7.2L12 16.4 5.7 20.8 8 13.6l-6-4.4h7.6z"/></svg>212 credits</div>
+        <button class="btn-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></button>
+        <div class="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm cursor-pointer" style="background:var(--grad);" onclick="showLanding()">VJ</div>
+      </div>
+    </div>
+
+    <div class="p-6 md:p-8 max-w-[1400px]">
+
+      <!-- ============ DASHBOARD HOME ============ -->
+      <section class="sub-view active" id="sv-dashboard">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 class="font-display text-2xl font-semibold">Welcome back, Vijay</h1>
+            <p class="text-sm text-[var(--ink-dim)] mt-1">Here's what's happening in your studio.</p>
+          </div>
+          <button class="btn-primary" onclick="goto('create-video')">+ New video</button>
+        </div>
+
+        <div class="grid sm:grid-cols-3 gap-5 mb-8">
+          <div class="glass p-5"><p class="text-xs text-[var(--ink-dim)] mb-2">Videos generated</p><p class="font-display text-3xl font-semibold">128</p><p class="text-xs text-[var(--purple-2)] mt-2">↑ 12 this week</p></div>
+          <div class="glass p-5"><p class="text-xs text-[var(--ink-dim)] mb-2">Credits remaining</p><p class="font-display text-3xl font-semibold">212</p><p class="text-xs text-[var(--ink-faint)] mt-2">Resets in 14 days</p></div>
+          <div class="glass p-5"><p class="text-xs text-[var(--ink-dim)] mb-2">Storage used</p><p class="font-display text-3xl font-semibold">6.4 GB</p><p class="text-xs text-[var(--ink-faint)] mt-2">of 50 GB</p></div>
+        </div>
+
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-display text-lg font-semibold">Recent projects</h2>
+          <span class="text-sm text-[var(--purple-2)] cursor-pointer" onclick="goto('projects')">View all →</span>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5" id="dash-recent-grid"></div>
+      </section>
+
+      <!-- ============ CREATE VIDEO ============ -->
+      <section class="sub-view" id="sv-create-video">
+        <h1 class="font-display text-2xl font-semibold mb-1">Create Video</h1>
+        <p class="text-sm text-[var(--ink-dim)] mb-6">Choose how you want to start — text, an image, or a full script.</p>
+
+        <div class="flex gap-2 mb-7 glass p-1.5 w-fit flex-wrap">
+          <div class="tab-btn active" data-tab="text" onclick="switchCreateTab('text')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h10M4 18h13"/></svg>Text to Video
+          </div>
+          <div class="tab-btn" data-tab="image" onclick="switchCreateTab('image')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-9 9"/></svg>Image to Video
+          </div>
+          <div class="tab-btn" data-tab="script" onclick="switchCreateTab('script')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3v5h5M6 3h8l6 6v12H6z"/></svg>Script to Video
+          </div>
+        </div>
+
+        <!-- TEXT TO VIDEO -->
+        <div class="create-tab active" id="tab-text">
+          <div class="grid lg:grid-cols-[1fr_360px] gap-6">
+            <div class="glass p-6">
+              <label class="field-label">Describe the video you want to create…</label>
+              <textarea rows="4" id="text-prompt" placeholder="A cinematic drone shot flying over the beautiful Western Ghats at sunrise, dramatic clouds, golden light, ultra-realistic, cinematic camera movement.">A cinematic drone shot flying over the beautiful Western Ghats at sunrise, dramatic clouds, golden light, ultra-realistic, cinematic camera movement.</textarea>
+
+              <div class="grid sm:grid-cols-2 gap-5 mt-6">
+                <div><label class="field-label">Video style</label><div class="flex flex-wrap gap-2" id="style-pills">
+                  <span class="option-pill active">Cinematic</span><span class="option-pill">Realistic</span><span class="option-pill">Anime</span><span class="option-pill">3D Animation</span><span class="option-pill">Documentary</span><span class="option-pill">Commercial</span><span class="option-pill">Fantasy</span><span class="option-pill">Sci-Fi</span>
+                </div></div>
+                <div><label class="field-label">Aspect ratio</label><div class="flex flex-wrap gap-2" id="ratio-pills">
+                  <span class="option-pill active">16:9</span><span class="option-pill">9:16</span><span class="option-pill">1:1</span><span class="option-pill">4:5</span>
+                </div></div>
+              </div>
+
+              <div class="grid sm:grid-cols-2 gap-5 mt-6">
+                <div><label class="field-label">Duration</label><select class="select-chip" id="duration-select">
+                  <option>5 seconds</option><option selected>10 seconds</option><option>15 seconds</option><option>30 seconds</option>
+                </select></div>
+                <div><label class="field-label">Resolution</label><select class="select-chip" id="res-select">
+                  <option>720p</option><option selected>1080p</option><option>4K</option>
+                </select></div>
+              </div>
+
+              <div class="grid sm:grid-cols-2 gap-5 mt-6">
+                <div><label class="field-label">Camera movement</label><select class="select-chip" id="camera-select"><option>Drone flyover</option><option>Slow dolly in</option><option>Static</option><option>Handheld</option><option>Orbit</option></select></div>
+                <div><label class="field-label">Visual style</label><select class="select-chip" id="visualstyle-select"><option>Golden hour</option><option>High contrast</option><option>Muted / editorial</option><option>Neon night</option></select></div>
+              </div>
+
+              <div class="grid sm:grid-cols-2 gap-5 mt-6">
+                <div><label class="field-label">Motion strength <span class="font-mono text-[var(--ink-faint)]" id="motion-val">60%</span></label><input type="range" id="motion-range" min="0" max="100" value="60" class="w-full accent-[var(--red)]" oninput="document.getElementById('motion-val').innerText=this.value+'%'"></div>
+                <div><label class="field-label">Creativity level <span class="font-mono text-[var(--ink-faint)]" id="creativity-val">75%</span></label><input type="range" id="creativity-range" min="0" max="100" value="75" class="w-full accent-[var(--red)]" oninput="document.getElementById('creativity-val').innerText=this.value+'%'"></div>
+              </div>
+            </div>
+
+            <div class="glass p-6 h-fit sticky top-24">
+              <p class="font-display font-semibold mb-4">Generation summary</p>
+              <div class="scan-frame mb-4" style="aspect-ratio:16/9;"><div class="frame-gradient" style="opacity:.3; filter:blur(30px);"></div><div class="scan-grid"></div>
+                <div class="absolute inset-0 flex items-center justify-center text-[var(--ink-faint)] text-xs font-mono">PREVIEW WILL APPEAR HERE</div>
+              </div>
+              <div class="space-y-2.5 text-sm mb-6">
+                <div class="flex justify-between"><span class="text-[var(--ink-dim)]">Style</span><span id="sum-style">Cinematic</span></div>
+                <div class="flex justify-between"><span class="text-[var(--ink-dim)]">Aspect ratio</span><span id="sum-ratio">16:9</span></div>
+                <div class="flex justify-between"><span class="text-[var(--ink-dim)]">Duration</span><span id="sum-duration">10 seconds</span></div>
+                <div class="flex justify-between"><span class="text-[var(--ink-dim)]">Resolution</span><span id="sum-res">1080p</span></div>
+                <div class="h-px bg-white/10 my-3"></div>
+                <div class="flex justify-between font-semibold"><span>Estimated cost</span><span class="font-mono text-[var(--red-2)]" id="sum-cost">32 credits</span></div>
+              </div>
+              <button class="btn-primary w-full" onclick="startGeneration()">Generate Video</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- IMAGE TO VIDEO -->
+        <div class="create-tab" id="tab-image">
+          <div class="grid lg:grid-cols-[1fr_360px] gap-6">
+            <div class="glass p-6">
+              <label class="field-label">Upload source image</label>
+              <div id="drop-zone" class="border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition" style="border-color:var(--border-2);" onclick="document.getElementById('img-input').click()">
+                <svg class="mx-auto mb-3" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="1.6"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                <p class="text-sm font-medium">Drag & drop an image, or click to browse</p>
+                <p class="text-xs text-[var(--ink-faint)] mt-1">PNG, JPG up to 10MB</p>
+                <input type="file" id="img-input" class="hidden" accept="image/*" onchange="previewImage(event)">
+              </div>
+              <div id="img-preview-wrap" class="mt-4 hidden"><img id="img-preview" class="rounded-xl w-full max-h-64 object-cover"></div>
+
+              <label class="field-label mt-6">Describe motion</label>
+              <textarea rows="3" id="img-motion-prompt" placeholder="Animate this image with slow cinematic camera movement and realistic environmental motion.">Animate this image with slow cinematic camera movement and realistic environmental motion.</textarea>
+
+              <div class="grid sm:grid-cols-2 gap-5 mt-6">
+                <div><label class="field-label">Camera movement</label><select class="select-chip" id="img-camera-select"><option>Slow zoom in</option><option>Pan left to right</option><option>Orbit</option><option>Parallax drift</option></select></div>
+                <div><label class="field-label">Duration</label><select class="select-chip" id="img-duration-select"><option>5 seconds</option><option selected>10 seconds</option><option>15 seconds</option></select></div>
+              </div>
+            </div>
+            <div class="glass p-6 h-fit sticky top-24">
+              <p class="font-display font-semibold mb-4">Generation summary</p>
+              <div class="flex justify-between text-sm mb-2"><span class="text-[var(--ink-dim)]">Source</span><span>Uploaded image</span></div>
+              <div class="flex justify-between text-sm mb-6"><span class="text-[var(--ink-dim)]">Estimated cost</span><span class="font-mono text-[var(--red-2)]">24 credits</span></div>
+              <button class="btn-primary w-full" onclick="startGeneration()">Generate Video</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCRIPT TO VIDEO -->
+        <div class="create-tab" id="tab-script">
+          <div class="grid lg:grid-cols-[1fr_360px] gap-6">
+            <div class="glass p-6 space-y-6">
+              <div><label class="field-label">Video title</label><input type="text" id="script-title" placeholder="e.g. Why Elevators Fail — And How To Prevent It"></div>
+              <div><label class="field-label">Script</label><textarea rows="6" id="script-body" placeholder="Paste your full script here. Scenes will be generated automatically from each paragraph."></textarea></div>
+              <div class="grid sm:grid-cols-2 gap-5">
+                <div><label class="field-label">Voice style</label><select class="select-chip" id="script-voicestyle"><option>Warm narrator</option><option>Energetic host</option><option>Corporate &amp; calm</option><option>Documentary</option></select></div>
+                <div><label class="field-label">Visual style</label><select class="select-chip" id="script-visualstyle"><option>Cinematic</option><option>Corporate</option><option>Documentary</option><option>Social media</option></select></div>
+              </div>
+              <div class="grid sm:grid-cols-2 gap-5">
+                <div><label class="field-label">Background music</label><select class="select-chip" id="script-music"><option>Ambient</option><option>Upbeat corporate</option><option>Cinematic score</option><option>None</option></select></div>
+                <div><label class="field-label">Subtitle style</label><select class="select-chip" id="script-subtitle"><option>Bold captions</option><option>Minimal</option><option>Karaoke highlight</option><option>Off</option></select></div>
+              </div>
+              <div class="glass p-4 !rounded-xl">
+                <p class="text-xs font-semibold text-[var(--ink-dim)] mb-2">AI will automatically generate</p>
+                <div class="flex flex-wrap gap-2 text-xs">
+                  <span class="option-pill !cursor-default">Scenes</span><span class="option-pill !cursor-default">Visuals</span><span class="option-pill !cursor-default">Voiceover</span><span class="option-pill !cursor-default">Captions</span><span class="option-pill !cursor-default">Music</span>
+                </div>
+              </div>
+            </div>
+            <div class="glass p-6 h-fit sticky top-24">
+              <p class="font-display font-semibold mb-4">Generation summary</p>
+              <div class="flex justify-between text-sm mb-6"><span class="text-[var(--ink-dim)]">Estimated cost</span><span class="font-mono text-[var(--red-2)]">48 credits</span></div>
+              <button class="btn-primary w-full" onclick="startGeneration()">Generate Complete Video</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ AI AVATARS ============ -->
+      <section class="sub-view" id="sv-avatars">
+        <h1 class="font-display text-2xl font-semibold mb-1">AI Avatars</h1>
+        <p class="text-sm text-[var(--ink-dim)] mb-6">Pick a presenter, or upload your own likeness.</p>
+        <div class="grid lg:grid-cols-[1fr_360px] gap-6">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <p class="font-semibold text-sm">Choose an avatar</p>
+              <button class="btn-ghost btn-sm">+ Upload custom avatar</button>
+            </div>
+            <div class="grid sm:grid-cols-3 gap-4" id="avatar-grid"></div>
+          </div>
+          <div class="glass p-6 h-fit">
+            <label class="field-label">Script</label>
+            <textarea rows="4" id="avatar-script" placeholder="Type what your avatar should say..."></textarea>
+            <div class="grid grid-cols-2 gap-4 mt-5">
+              <div><label class="field-label">Language</label><select class="select-chip" id="avatar-language"><option>English</option><option>Kannada</option><option>Hindi</option><option>Spanish</option></select></div>
+              <div><label class="field-label">Voice</label><select class="select-chip" id="avatar-voice"></select></div>
+            </div>
+            <button class="btn-primary w-full mt-6" onclick="generateAvatarVideo()">Generate Avatar Video</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VOICE STUDIO ============ -->
+      <section class="sub-view" id="sv-voice">
+        <h1 class="font-display text-2xl font-semibold mb-1">AI Voice Studio</h1>
+        <p class="text-sm text-[var(--ink-dim)] mb-6">Generate natural-sounding voiceover in any language.</p>
+        <div class="grid lg:grid-cols-[1fr_360px] gap-6">
+          <div class="glass p-6">
+            <label class="field-label">Text to speech</label>
+            <textarea rows="4" id="voice-text" placeholder="Type the script you want narrated..."></textarea>
+            <div class="grid sm:grid-cols-2 gap-5 mt-6">
+              <div><label class="field-label">Language</label><select class="select-chip" id="voice-language"><option>English (US)</option><option>English (UK)</option><option>Hindi</option><option>Kannada</option><option>Spanish</option></select></div>
+              <div><label class="field-label">Accent</label><select class="select-chip" id="voice-accent"><option>Neutral</option><option>Indian</option><option>British</option><option>Australian</option></select></div>
+            </div>
+            <div class="grid sm:grid-cols-2 gap-5 mt-6">
+              <div><label class="field-label">Speed</label><input type="range" id="voice-speed" min="0" max="100" value="50" class="w-full accent-[var(--red)]"></div>
+              <div><label class="field-label">Pitch</label><input type="range" id="voice-pitch" min="0" max="100" value="50" class="w-full accent-[var(--red)]"></div>
+            </div>
+            <div class="mt-6"><label class="field-label">Emotion</label>
+              <div class="flex flex-wrap gap-2"><span class="option-pill active">Neutral</span><span class="option-pill">Happy</span><span class="option-pill">Serious</span><span class="option-pill">Excited</span><span class="option-pill">Calm</span></div>
+            </div>
+          </div>
+          <div class="glass p-6 h-fit">
+            <p class="font-semibold text-sm mb-4">Voice library</p>
+            <div class="space-y-2" id="voice-list"></div>
+            <button class="btn-primary w-full mt-5" onclick="generateVoiceover()">Generate Voiceover</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIDEO EDITOR ============ -->
+      <section class="sub-view" id="sv-editor">
+        <h1 class="font-display text-2xl font-semibold mb-1">Video Editor</h1>
+        <p class="text-sm text-[var(--ink-dim)] mb-6">Fine-tune your generated video before export.</p>
+        <div class="glass p-4 mb-4">
+          <div class="flex flex-wrap gap-2 mb-4" id="editor-toolbar">
+            <button class="btn-ghost btn-sm">+ Text</button><button class="btn-ghost btn-sm">+ Image</button><button class="btn-ghost btn-sm">+ Video</button><button class="btn-ghost btn-sm">+ Audio</button><button class="btn-ghost btn-sm">+ Subtitle</button><button class="btn-ghost btn-sm">+ Transition</button><button class="btn-ghost btn-sm">+ Effect</button>
+          </div>
+          <div class="scan-frame mb-5" style="max-width:720px; margin:0 auto;">
+            <div class="frame-gradient" style="opacity:.4;"></div><div class="scan-grid"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <div class="w-14 h-14 rounded-full glass flex items-center justify-center cursor-pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div>
+            </div>
+            <div class="absolute bottom-3 left-3 right-3 flex items-center gap-3 bg-black/40 rounded-lg px-3 py-2">
+              <span class="font-mono text-[.7rem]">00:04</span>
+              <div class="flex-1 h-1 bg-white/20 rounded-full"><div class="h-1 rounded-full" style="width:38%; background:var(--grad);"></div></div>
+              <span class="font-mono text-[.7rem] text-[var(--ink-faint)]">00:10</span>
+            </div>
+          </div>
+
+          <p class="text-xs font-semibold text-[var(--ink-dim)] mb-2">Timeline</p>
+          <div class="space-y-2 font-mono text-[.68rem]">
+            <div class="flex items-center gap-2"><span class="w-14 text-[var(--ink-faint)]">VIDEO</span><div class="flex-1 flex gap-1">
+              <div class="h-9 rounded-md flex-1" style="background:linear-gradient(90deg, rgba(255,61,99,.35), rgba(255,61,99,.15)); border:1px solid var(--border-2);"></div>
+              <div class="h-9 rounded-md flex-1" style="background:linear-gradient(90deg, rgba(139,92,246,.35), rgba(139,92,246,.15)); border:1px solid var(--border-2);"></div>
+              <div class="h-9 rounded-md flex-1" style="background:linear-gradient(90deg, rgba(77,141,255,.35), rgba(77,141,255,.15)); border:1px solid var(--border-2);"></div>
+            </div></div>
+            <div class="flex items-center gap-2"><span class="w-14 text-[var(--ink-faint)]">TEXT</span><div class="flex-1 flex gap-1"><div class="h-6 rounded-md" style="width:30%; background:var(--panel-3); border:1px solid var(--border-2);"></div></div></div>
+            <div class="flex items-center gap-2"><span class="w-14 text-[var(--ink-faint)]">AUDIO</span><div class="flex-1 flex gap-1 items-end h-6">
+              <div class="flex gap-[2px] items-end w-full">
+                <div class="bar" style="height:8px"></div><div class="bar" style="height:16px"></div><div class="bar" style="height:10px"></div><div class="bar" style="height:20px"></div><div class="bar" style="height:12px"></div><div class="bar" style="height:18px"></div><div class="bar" style="height:9px"></div><div class="bar" style="height:15px"></div>
+              </div>
+            </div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ MY PROJECTS ============ -->
+      <section class="sub-view" id="sv-projects">
+        <div class="flex items-center justify-between mb-6">
+          <div><h1 class="font-display text-2xl font-semibold mb-1">My Projects</h1><p class="text-sm text-[var(--ink-dim)]">All your generated and in-progress videos.</p></div>
+          <button class="btn-primary" onclick="goto('create-video')">+ New video</button>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5" id="projects-grid"></div>
+      </section>
+
+      <!-- ============ TEMPLATES ============ -->
+      <section class="sub-view" id="sv-templates">
+        <h1 class="font-display text-2xl font-semibold mb-1">Templates</h1>
+        <p class="text-sm text-[var(--ink-dim)] mb-6">Ready-made starting points for every format.</p>
+        <div class="flex flex-wrap gap-2 mb-6" id="template-cats"></div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5" id="templates-grid"></div>
+      </section>
+
+      <!-- ============ ASSETS ============ -->
+      <section class="sub-view" id="sv-assets">
+        <h1 class="font-display text-2xl font-semibold mb-1">Assets</h1>
+        <p class="text-sm text-[var(--ink-dim)] mb-6">Images, clips, and audio uploaded to your library.</p>
+        <div class="grid sm:grid-cols-3 lg:grid-cols-6 gap-4" id="assets-grid"></div>
+      </section>
+
+      <!-- ============ SETTINGS ============ -->
+      <section class="sub-view" id="sv-settings">
+        <h1 class="font-display text-2xl font-semibold mb-1">Settings</h1>
+        <p class="text-sm text-[var(--ink-dim)] mb-6">Manage your account, billing, and preferences.</p>
+        <div class="glass p-6 max-w-lg space-y-5">
+          <div><label class="field-label">Full name</label><input type="text" id="settings-name" value=""></div>
+          <div><label class="field-label">Email</label><input type="email" id="settings-email" value=""></div>
+          <div><label class="field-label">Plan</label><div class="flex items-center justify-between"><span class="text-sm">Creator — $29/mo</span><span class="text-sm text-[var(--purple-2)] cursor-pointer" onclick="showLanding(); scrollToSection('pricing');">Change plan →</span></div></div>
+          <button class="btn-primary" onclick="saveSettings()">Save changes</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<nav id="mobile-nav">
+  <div class="side-link !mb-0 !flex-col !gap-1 !text-[.6rem] active" data-view="dashboard"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Home</div>
+  <div class="side-link !mb-0 !flex-col !gap-1 !text-[.6rem]" data-view="create-video"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Create</div>
+  <div class="side-link !mb-0 !flex-col !gap-1 !text-[.6rem]" data-view="projects"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>Projects</div>
+  <div class="side-link !mb-0 !flex-col !gap-1 !text-[.6rem]" data-view="templates"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Templates</div>
+  <div class="side-link !mb-0 !flex-col !gap-1 !text-[.6rem]" data-view="settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8"/></svg>Settings</div>
+</nav>
+
+<!-- ============================================================ GENERATION OVERLAY ============================================================ -->
+<div id="gen-overlay">
+  <div class="glass-strong p-8 w-full max-w-md">
+    <div class="scan-frame mb-6"><div class="frame-gradient"></div><div class="scan-grid"></div><div class="scan-line"></div></div>
+    <div class="space-y-1 mb-6" id="gen-stages">
+      <div class="gen-stage" data-i="0"><div class="gen-check"></div><span class="text-sm font-mono">ANALYZING PROMPT</span></div>
+      <div class="gen-stage" data-i="1"><div class="gen-check"></div><span class="text-sm font-mono">GENERATING SCENES</span></div>
+      <div class="gen-stage" data-i="2"><div class="gen-check"></div><span class="text-sm font-mono">CREATING VISUALS</span></div>
+      <div class="gen-stage" data-i="3"><div class="gen-check"></div><span class="text-sm font-mono">ADDING MOTION</span></div>
+      <div class="gen-stage" data-i="4"><div class="gen-check"></div><span class="text-sm font-mono">RENDERING VIDEO</span></div>
+      <div class="gen-stage" data-i="5"><div class="gen-check"></div><span class="text-sm font-mono">FINALIZING YOUR CREATION</span></div>
+    </div>
+    <div class="progress-track mb-2"><div class="progress-fill" id="gen-progress"></div></div>
+    <div class="flex items-center justify-between text-xs font-mono text-[var(--ink-faint)] mb-6">
+      <span id="gen-pct">0%</span><span id="gen-eta">Estimated time: 38s</span>
+    </div>
+    <button class="btn-ghost w-full" onclick="cancelGeneration()">Cancel</button>
+  </div>
+</div>
+
+<!-- ============================================================ RESULT MODAL ============================================================ -->
+<div class="modal-backdrop" id="result-modal">
+  <div class="glass-strong p-7 w-full max-w-lg">
+    <div class="scan-frame mb-5"><div class="frame-gradient" style="opacity:.5;"></div><div class="scan-grid"></div>
+      <div class="absolute inset-0 flex items-center justify-center"><div class="w-14 h-14 rounded-full glass flex items-center justify-center cursor-pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div></div>
+    </div>
+    <h3 class="font-display text-lg font-semibold mb-1">Your video is ready</h3>
+    <p class="text-sm text-[var(--ink-dim)] mb-5">Generated in 34 seconds · 1080p · 10s</p>
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      <button class="btn-primary btn-sm">Download</button>
+      <button class="btn-ghost btn-sm">Share</button>
+      <button class="btn-ghost btn-sm" onclick="closeModal('result-modal'); goto('editor');">Edit</button>
+      <button class="btn-ghost btn-sm" onclick="closeModal('result-modal')">Regenerate</button>
+    </div>
+    <button class="btn-ghost btn-sm w-full" onclick="closeModal('result-modal'); goto('projects');">Save to Projects</button>
+  </div>
+</div>
+
+<!-- ============================================================ AUTH MODAL ============================================================ -->
+<div class="modal-backdrop" id="auth-modal">
+  <div class="glass-strong p-8 w-full max-w-sm relative">
+    <button class="btn-icon absolute top-4 right-4 !w-8 !h-8" onclick="closeModal('auth-modal')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+
+    <div id="auth-login">
+      <h3 class="font-display text-xl font-semibold mb-1">Welcome back</h3>
+      <p class="text-sm text-[var(--ink-dim)] mb-6">Log in to keep creating.</p>
+      <button class="btn-ghost w-full mb-4 flex items-center justify-center gap-2">
+        <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.7-2.4 3.6v3h3.9c2.3-2.1 3.5-5.3 3.5-8.8z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.9-3c-1.1.7-2.4 1.2-4 1.2-3.1 0-5.7-2.1-6.6-4.9H1.4v3.1C3.4 21.4 7.4 24 12 24z"/><path fill="#FBBC05" d="M5.4 14.4c-.2-.7-.4-1.4-.4-2.2s.1-1.5.4-2.2V6.9H1.4C.5 8.5 0 10.2 0 12s.5 3.5 1.4 5.1l4-2.7z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.5 1.8l3.4-3.4C17.9 1.2 15.2 0 12 0 7.4 0 3.4 2.6 1.4 6.9l4 2.7c.9-2.8 3.5-4.8 6.6-4.8z"/></svg>
+        Continue with Google
+      </button>
+      <div class="flex items-center gap-3 mb-4"><div class="h-px bg-white/10 flex-1"></div><span class="text-xs text-[var(--ink-faint)]">or</span><div class="h-px bg-white/10 flex-1"></div></div>
+      <div class="space-y-3 mb-5">
+        <input type="email" id="login-email" placeholder="Email address">
+        <input type="password" id="login-password" placeholder="Password">
+      </div>
+      <p class="text-xs text-right text-[var(--purple-2)] cursor-pointer mb-5" onclick="switchAuth('forgot')">Forgot password?</p>
+      <button class="btn-primary w-full mb-4" onclick="submitLogin()">Log in</button>
+      <p class="text-xs text-center text-[var(--ink-dim)]">No account? <span class="text-[var(--red-2)] cursor-pointer font-medium" onclick="switchAuth('signup')">Sign up</span></p>
+    </div>
+
+    <div id="auth-signup" class="hidden">
+      <h3 class="font-display text-xl font-semibold mb-1">Create your account</h3>
+      <p class="text-sm text-[var(--ink-dim)] mb-6">15 free credits, no card required.</p>
+      <button class="btn-ghost w-full mb-4 flex items-center justify-center gap-2">
+        <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.7-2.4 3.6v3h3.9c2.3-2.1 3.5-5.3 3.5-8.8z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.9-3c-1.1.7-2.4 1.2-4 1.2-3.1 0-5.7-2.1-6.6-4.9H1.4v3.1C3.4 21.4 7.4 24 12 24z"/><path fill="#FBBC05" d="M5.4 14.4c-.2-.7-.4-1.4-.4-2.2s.1-1.5.4-2.2V6.9H1.4C.5 8.5 0 10.2 0 12s.5 3.5 1.4 5.1l4-2.7z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.5 1.8l3.4-3.4C17.9 1.2 15.2 0 12 0 7.4 0 3.4 2.6 1.4 6.9l4 2.7c.9-2.8 3.5-4.8 6.6-4.8z"/></svg>
+        Continue with Google
+      </button>
+      <div class="flex items-center gap-3 mb-4"><div class="h-px bg-white/10 flex-1"></div><span class="text-xs text-[var(--ink-faint)]">or</span><div class="h-px bg-white/10 flex-1"></div></div>
+      <div class="space-y-3 mb-5">
+        <input type="text" id="signup-name" placeholder="Full name">
+        <input type="email" id="signup-email" placeholder="Email address">
+        <input type="password" id="signup-password" placeholder="Create password">
+      </div>
+      <button class="btn-primary w-full mb-4" onclick="submitSignup()">Create account</button>
+      <p class="text-xs text-center text-[var(--ink-dim)]">Already have an account? <span class="text-[var(--red-2)] cursor-pointer font-medium" onclick="switchAuth('login')">Log in</span></p>
+    </div>
+
+    <div id="auth-forgot" class="hidden">
+      <h3 class="font-display text-xl font-semibold mb-1">Reset your password</h3>
+      <p class="text-sm text-[var(--ink-dim)] mb-6">We'll send a reset link to your email.</p>
+      <input type="email" id="forgot-email" placeholder="Email address" class="mb-5">
+      <button class="btn-primary w-full mb-4" onclick="submitForgot()">Send reset link</button>
+      <p class="text-xs text-center text-[var(--ink-dim)]">Remembered it? <span class="text-[var(--red-2)] cursor-pointer font-medium" onclick="switchAuth('login')">Log in</span></p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Point the frontend at the backend. Override by setting this before this file loads,
+  // e.g. <script>window.AMS_API_URL = 'https://api.yourdomain.com/api';</script>
+  window.AMS_API_URL = window.AMS_API_URL || 'http://localhost:4000/api';
+</script>
+<script src="js/api/client.js"></script>
+<script src="js/api/auth.js"></script>
+<script src="js/api/projects.js"></script>
+<script src="js/api/generations.js"></script>
+<script src="js/api/billing.js"></script>
+<script>
+/* ================= HELPERS ================= */
+const gradients = [
+  'linear-gradient(135deg, rgba(255,61,99,.55), rgba(139,92,246,.4))',
+  'linear-gradient(135deg, rgba(139,92,246,.55), rgba(77,141,255,.4))',
+  'linear-gradient(135deg, rgba(77,141,255,.5), rgba(255,61,99,.35))',
+  'linear-gradient(135deg, rgba(255,61,99,.4), rgba(77,141,255,.45))',
+];
+function gradFor(i){ return gradients[i % gradients.length]; }
+function fmtDuration(sec){ if(!sec && sec!==0) return '—'; const m=Math.floor(sec/60), s=sec%60; return `${m}:${String(s).padStart(2,'0')}`; }
+function timeAgo(iso){
+  const diff = (Date.now() - new Date(iso).getTime())/1000;
+  if(diff<60) return 'just now';
+  if(diff<3600) return Math.floor(diff/60)+'m ago';
+  if(diff<86400) return Math.floor(diff/3600)+'h ago';
+  return Math.floor(diff/86400)+'d ago';
+}
+const STATUS_STYLE = {
+  ready:{t:'Ready',c:'#34d399',bg:'rgba(52,211,153,.15)'},
+  completed:{t:'Ready',c:'#34d399',bg:'rgba(52,211,153,.15)'},
+  processing:{t:'Processing',c:'#fbbf24',bg:'rgba(251,191,36,.15)'},
+  queued:{t:'Processing',c:'#fbbf24',bg:'rgba(251,191,36,.15)'},
+  draft:{t:'Draft',c:'#9c9ca8',bg:'rgba(156,156,168,.15)'},
+  failed:{t:'Failed',c:'#f87171',bg:'rgba(248,113,113,.15)'},
+};
+function toastError(err){
+  console.error(err);
+  const msg = (err && err.message) ? err.message : 'Something went wrong. Please try again.';
+  showToast(msg, true);
+}
+function showToast(msg, isError){
+  let el = document.getElementById('ams-toast');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'ams-toast';
+    el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:200;padding:12px 20px;border-radius:12px;font-size:.85rem;font-weight:600;max-width:90vw;box-shadow:0 12px 30px rgba(0,0,0,.4);transition:opacity .3s;';
+    document.body.appendChild(el);
+  }
+  el.style.background = isError ? '#3a1420' : '#12291f';
+  el.style.color = isError ? '#ff8fa3' : '#6ee7b7';
+  el.style.border = isError ? '1px solid rgba(255,61,99,.4)' : '1px solid rgba(52,211,153,.4)';
+  el.innerText = msg;
+  el.style.opacity = '1';
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=>{ el.style.opacity='0'; }, 4000);
+}
+
+function projectCard(p, withActions){
+  const s = STATUS_STYLE[p.status] || STATUS_STYLE.draft;
+  const seed = p.id ? p.id.charCodeAt(0) + p.id.charCodeAt(p.id.length-1) : 0;
+  return `<div class="glass p-3 thumb-wrap" data-project-id="${p.id}">
+    <div class="thumb mb-3">
+      <div class="tgrad" style="background:${gradFor(seed)};"></div>
+      <div class="scan-grid" style="opacity:.5;"></div>
+      <div class="play-badge"><div class="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center"><svg width="14" height="14" viewBox="0 0 24 24" fill="#111"><path d="M8 5v14l11-7z"/></svg></div></div>
+      <span class="status-badge absolute top-2 right-2" style="color:${s.c}; background:${s.bg};">${s.t}</span>
+    </div>
+    <p class="text-sm font-semibold truncate mb-1">${escapeHtml(p.title)}</p>
+    <div class="flex items-center justify-between text-xs text-[var(--ink-faint)] font-mono">
+      <span>0:${String(p.durationSec||0).padStart(2,'0')}</span><span>${p.resolution||''}</span>
+    </div>
+    ${withActions ? `<div class="flex gap-1.5 mt-3">
+      <button class="btn-ghost btn-sm flex-1 !py-1.5" onclick="openProject('${p.id}')">Open</button>
+      <button class="btn-icon !w-8 !h-8" title="Download" onclick="downloadProject('${p.id}','${p.resultStorageKey||''}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></button>
+      <button class="btn-icon !w-8 !h-8" title="Delete" onclick="deleteProject('${p.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg></button>
+    </div>` : ''}
+  </div>`;
+}
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function openProject(id){
+  try{
+    const { url } = await window.assetsApi.downloadUrl((await window.projectsApi.get(id)).project.resultAssetId || '');
+    window.open(url, '_blank');
+  }catch(err){
+    showToast('This project has no finished render yet.', true);
+  }
+}
+async function downloadProject(id, storageKey){
+  if(!storageKey){ showToast('Nothing to download yet.', true); return; }
+  window.open(`${window.AMS_API_URL}/files/${encodeURIComponent(storageKey)}`, '_blank');
+}
+async function deleteProject(id){
+  if(!confirm('Delete this project? This cannot be undone.')) return;
+  try{ await window.projectsApi.remove(id); showToast('Project deleted.'); loadProjects(); loadDashboard(); }
+  catch(err){ toastError(err); }
+}
+
+/* ================= AUTH STATE ================= */
+let currentUser = null;
+
+async function checkSession(){
+  try{
+    const { user } = await window.authApi.me();
+    currentUser = user;
+    return true;
+  }catch{
+    currentUser = null;
+    return false;
+  }
+}
+
+/* ================= NAV LOGIC ================= */
+window.addEventListener('scroll', ()=>{
+  document.getElementById('topnav').classList.toggle('scrolled', window.scrollY > 30);
+});
+
+function showLanding(){
+  document.getElementById('view-landing').style.display='block';
+  document.getElementById('app-shell').style.display='none';
+  window.scrollTo({top:0});
+}
+async function enterApp(){
+  document.getElementById('view-landing').style.display='none';
+  document.getElementById('app-shell').style.display='flex';
+  window.scrollTo({top:0});
+  goto('dashboard');
+  loadDashboard();
+  loadProjects();
+  loadTemplates('All');
+  loadAvatars();
+  loadVoices();
+  loadAssets();
+}
+function goto(view){
+  document.querySelectorAll('.sub-view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('sv-'+view).classList.add('active');
+  document.querySelectorAll('#sidebar-nav .side-link, #mobile-nav .side-link').forEach(l=>l.classList.toggle('active', l.dataset.view===view));
+  document.getElementById('sidebar').classList.remove('open');
+  window.scrollTo({top:0});
+  if(view==='dashboard') loadDashboard();
+  if(view==='projects') loadProjects();
+  if(view==='settings') loadSettings();
+}
+document.querySelectorAll('#sidebar-nav .side-link, #mobile-nav .side-link').forEach(l=>{
+  l.addEventListener('click', ()=>goto(l.dataset.view));
+});
+document.querySelectorAll('.feat-card[data-target="app"]').forEach(c=>{
+  c.addEventListener('click', async ()=>{
+    if(!currentUser){ openAuth('signup'); return; }
+    goto(c.dataset.view);
+    if(c.dataset.tab) setTimeout(()=>switchCreateTab(c.dataset.tab), 50);
+  });
+});
+function scrollToSection(id){ document.getElementById(id).scrollIntoView({behavior:'smooth'}); }
+
+/* ================= DASHBOARD ================= */
+async function loadDashboard(){
+  try{
+    const d = await window.dashboardApi.summary();
+    document.querySelectorAll('#sv-dashboard .font-display.text-3xl')[0].innerText = d.videosGenerated;
+    document.querySelectorAll('#sv-dashboard .font-display.text-3xl')[1].innerText = d.credits;
+    document.querySelectorAll('#sv-dashboard .font-display.text-3xl')[2].innerText = (d.storageUsedMb/1024).toFixed(1)+' GB';
+    document.querySelector('.credit-pill').childNodes[1].textContent = ` ${d.credits} credits`;
+    const planNameEl = document.getElementById('sidebar-plan-name');
+    const creditsLeftEl = document.getElementById('sidebar-credits-left');
+    const barEl = document.getElementById('sidebar-credit-bar');
+    if(planNameEl) planNameEl.innerText = (d.plan && d.plan.name ? d.plan.name : 'Free') + ' Plan';
+    if(creditsLeftEl) creditsLeftEl.innerText = `${d.credits} left`;
+    if(barEl){
+      const monthlyByPlan = { free:15, creator:300, pro:1000 };
+      const monthly = monthlyByPlan[(d.plan && d.plan.key) || 'free'] || 15;
+      barEl.style.width = Math.max(4, Math.min(100, Math.round((d.credits/monthly)*100))) + '%';
+    }
+    document.getElementById('dash-recent-grid').innerHTML = d.recentProjects.length
+      ? d.recentProjects.map(p=>projectCard(p,false)).join('')
+      : `<p class="text-sm text-[var(--ink-faint)] col-span-full">No projects yet — create your first video to see it here.</p>`;
+  }catch(err){ toastError(err); }
+}
+
+async function loadProjects(){
+  const grid = document.getElementById('projects-grid');
+  grid.innerHTML = `<p class="text-sm text-[var(--ink-faint)] col-span-full">Loading projects…</p>`;
+  try{
+    const { projects } = await window.projectsApi.list();
+    grid.innerHTML = projects.length
+      ? projects.map(p=>projectCard(p,true)).join('')
+      : `<p class="text-sm text-[var(--ink-faint)] col-span-full">No projects yet. Click "+ New video" to get started.</p>`;
+  }catch(err){ toastError(err); grid.innerHTML = `<p class="text-sm text-[var(--ink-faint)] col-span-full">Couldn't load projects.</p>`; }
+}
+
+/* ================= TEMPLATES ================= */
+const templateCats = ["All","YouTube","Instagram Reels","TikTok","Advertisements","Product Videos","Cinematic","Business","Education","Real Estate","Social Media"];
+document.getElementById('template-cats').innerHTML = templateCats.map((c,i)=>`<span class="option-pill ${i===0?'active':''}" onclick="filterTemplates(this,'${c}')">${c}</span>`).join('');
+
+function templateCard(tpl,i){
+  return `<div class="glass p-3 thumb-wrap cursor-pointer" onclick="useTemplate('${tpl.id}')">
+    <div class="thumb mb-3"><div class="tgrad" style="background:${gradFor(tpl.thumbSeed||i)};"></div><div class="scan-grid" style="opacity:.5;"></div>
+      <div class="play-badge"><div class="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center"><svg width="14" height="14" viewBox="0 0 24 24" fill="#111"><path d="M8 5v14l11-7z"/></svg></div></div>
+    </div>
+    <p class="text-sm font-semibold mb-1">${escapeHtml(tpl.title)}</p>
+    <p class="text-xs text-[var(--ink-faint)] mb-3">${escapeHtml(tpl.category)}</p>
+    <button class="btn-ghost btn-sm w-full !py-1.5">Use Template</button>
+  </div>`;
+}
+async function loadTemplates(category){
+  try{
+    const { templates } = await window.libraryApi.templates(category);
+    const html = templates.length ? templates.map((t,i)=>templateCard(t,i)).join('') : `<p class="text-sm text-[var(--ink-faint)] col-span-full">No templates in this category yet.</p>`;
+    document.getElementById('templates-grid').innerHTML = html;
+    document.getElementById('landing-template-grid').innerHTML = templates.slice(0,4).map((t,i)=>templateCard(t,i)).join('');
+  }catch(err){ toastError(err); }
+}
+function filterTemplates(el, cat){
+  document.querySelectorAll('#template-cats .option-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  loadTemplates(cat);
+}
+async function useTemplate(id){
+  try{
+    const { prefill } = await window.libraryApi.useTemplate(id);
+    goto('create-video'); switchCreateTab('text');
+    if(prefill.prompt) document.getElementById('text-prompt').value = prefill.prompt;
+    if(prefill.duration) document.getElementById('duration-select').value = `${prefill.duration} seconds`;
+    if(prefill.resolution) document.getElementById('res-select').value = prefill.resolution;
+    updateCost();
+    showToast('Template applied — adjust and generate.');
+  }catch(err){ toastError(err); }
+}
+
+/* ================= AVATARS ================= */
+let selectedAvatarId = null;
+async function loadAvatars(){
+  try{
+    const { avatars } = await window.libraryApi.avatars();
+    document.getElementById('avatar-grid').innerHTML = avatars.map((a,i)=>`
+      <div class="glass p-4 text-center cursor-pointer avatar-card" data-id="${a.id}" onclick="selectAvatar(this,'${a.id}')">
+        <div class="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center font-display font-semibold text-lg" style="background:${gradFor(i)};">${a.name[0]}</div>
+        <p class="text-sm font-semibold">${escapeHtml(a.name)}</p>
+        <p class="text-xs text-[var(--ink-faint)] mt-0.5">${a.isCustom?'Custom':'Presenter'}</p>
+      </div>
+    `).join('');
+    const voiceSelect = document.getElementById('avatar-voice');
+    if(voiceSelect && voiceSelect.options.length===0){
+      const { voices } = await window.libraryApi.voices();
+      voiceSelect.innerHTML = voices.map(v=>`<option value="${v.id}">${escapeHtml(v.name)} — ${escapeHtml(v.description)}</option>`).join('');
+    }
+    if(avatars[0]){ selectedAvatarId = avatars[0].id; const first = document.querySelector('.avatar-card'); if(first) first.style.borderColor='rgba(255,61,99,.5)'; }
+  }catch(err){ toastError(err); }
+}
+function selectAvatar(el, id){
+  document.querySelectorAll('.avatar-card').forEach(a=>a.style.borderColor='var(--border)');
+  el.style.borderColor='rgba(255,61,99,.5)';
+  selectedAvatarId = id;
+}
+
+/* ================= VOICES ================= */
+async function loadVoices(){
+  try{
+    const { voices } = await window.libraryApi.voices();
+    document.getElementById('voice-list').innerHTML = voices.map(v=>`
+      <div class="flex items-center justify-between px-3 py-2.5 rounded-xl" style="background:var(--panel-2); border:1px solid var(--border);">
+        <div class="flex items-center gap-3">
+          <button class="btn-icon !w-8 !h-8" onclick="playVoice('${v.id}', this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="var(--red-2)"><path d="M8 5v14l11-7z"/></svg></button>
+          <div><p class="text-sm font-medium">${escapeHtml(v.name)}</p><p class="text-xs text-[var(--ink-faint)]">${escapeHtml(v.description)}</p></div>
+        </div>
+      </div>
+    `).join('');
+  }catch(err){ toastError(err); }
+}
+async function playVoice(id, btn){
+  try{
+    const { url } = await window.libraryApi.voicePreview(id);
+    new Audio(url).play();
+    btn.querySelector('svg').classList.add('spin');
+    setTimeout(()=>btn.querySelector('svg').classList.remove('spin'), 1500);
+  }catch(err){ toastError(err); }
+}
+
+/* ================= ASSETS ================= */
+async function loadAssets(){
+  try{
+    const { assets } = await window.assetsApi.list();
+    document.getElementById('assets-grid').innerHTML = assets.length
+      ? assets.map((a,i)=>`<div class="thumb cursor-pointer" onclick="window.open('${a.url}','_blank')"><div class="tgrad" style="background:${gradFor(i)};"></div></div>`).join('')
+      : `<p class="text-sm text-[var(--ink-faint)] col-span-full">No uploaded assets yet.</p>`;
+  }catch(err){ toastError(err); }
+}
+
+/* ================= SETTINGS ================= */
+async function loadSettings(){
+  if(!currentUser) return;
+  document.getElementById('settings-name').value = currentUser.name;
+  document.getElementById('settings-email').value = currentUser.email;
+}
+async function saveSettings(){
+  try{
+    const name = document.getElementById('settings-name').value.trim();
+    const email = document.getElementById('settings-email').value.trim();
+    const { user } = await window.authApi.updateProfile({ name, email });
+    currentUser = user;
+    showToast('Settings saved.');
+  }catch(err){ toastError(err); }
+}
+
+/* ================= CREATE VIDEO TABS ================= */
+function switchCreateTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.querySelectorAll('.create-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+document.querySelectorAll('#style-pills .option-pill').forEach(p=>p.addEventListener('click', ()=>{
+  document.querySelectorAll('#style-pills .option-pill').forEach(x=>x.classList.remove('active')); p.classList.add('active');
+  document.getElementById('sum-style').innerText = p.innerText;
+}));
+document.querySelectorAll('#ratio-pills .option-pill').forEach(p=>p.addEventListener('click', ()=>{
+  document.querySelectorAll('#ratio-pills .option-pill').forEach(x=>x.classList.remove('active')); p.classList.add('active');
+  document.getElementById('sum-ratio').innerText = p.innerText;
+}));
+document.getElementById('duration-select').addEventListener('change', e=>{ document.getElementById('sum-duration').innerText = e.target.value; updateCost(); });
+document.getElementById('res-select').addEventListener('change', e=>{ document.getElementById('sum-res').innerText = e.target.value; updateCost(); });
+function updateCost(){
+  // Mirrors backend pricing for display only — the backend recalculates and is authoritative.
+  const dur = document.getElementById('duration-select').value;
+  const res = document.getElementById('res-select').value;
+  let base = {"5 seconds":16,"10 seconds":32,"15 seconds":48,"30 seconds":90}[dur] || 32;
+  if(res==="4K") base = Math.round(base*1.8);
+  if(res==="720p") base = Math.round(base*0.7);
+  document.getElementById('sum-cost').innerText = base + " credits";
+}
+function previewImage(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const url = URL.createObjectURL(file);
+  document.getElementById('img-preview').src = url;
+  document.getElementById('img-preview-wrap').classList.remove('hidden');
+}
+
+/* ================= GENERATION FLOW (real jobs, real polling) ================= */
+let activeJobId = null;
+let cancelRequested = false;
+
+function setGenStageUI(stage, progress){
+  const order = ["ANALYZING PROMPT","GENERATING SCENES","CREATING VISUALS","ADDING MOTION","RENDERING VIDEO","FINALIZING YOUR CREATION"];
+  const idx = Math.max(0, order.indexOf(stage));
+  document.querySelectorAll('.gen-stage').forEach((el,i)=>{
+    el.classList.toggle('active', i===idx);
+    el.classList.toggle('done', i<idx || progress>=100);
+  });
+  document.getElementById('gen-progress').style.width = progress+'%';
+  document.getElementById('gen-pct').innerText = Math.round(progress)+'%';
+  document.getElementById('gen-eta').innerText = progress<100 ? 'Rendering…' : 'Complete';
+}
+
+async function startGeneration(){
+  if(!currentUser){ openAuth('signup'); return; }
+  const activeTabEl = document.querySelector('.create-tab.active');
+  const tab = activeTabEl ? activeTabEl.id.replace('tab-','') : 'text';
+
+  const overlay = document.getElementById('gen-overlay');
+  document.querySelectorAll('.gen-stage').forEach(s=>s.classList.remove('active','done'));
+  document.getElementById('gen-progress').style.width='0%';
+  document.getElementById('gen-pct').innerText='0%';
+  overlay.style.display='flex';
+  cancelRequested = false;
+
+  try{
+    let result;
+    if(tab==='text'){
+      const style = document.querySelector('#style-pills .option-pill.active')?.innerText || 'Cinematic';
+      const aspectRatio = document.querySelector('#ratio-pills .option-pill.active')?.innerText || '16:9';
+      result = await window.generationsApi.textToVideo({
+        prompt: document.getElementById('text-prompt').value,
+        style, aspectRatio,
+        duration: document.getElementById('duration-select').value,
+        resolution: document.getElementById('res-select').value,
+        cameraMovement: document.getElementById('camera-select').value,
+        visualStyle: document.getElementById('visualstyle-select').value,
+        motionStrength: parseInt(document.getElementById('motion-range').value,10),
+        creativity: parseInt(document.getElementById('creativity-range').value,10),
+      });
+    } else if(tab==='image'){
+      const file = document.getElementById('img-input').files[0];
+      if(!file){ overlay.style.display='none'; showToast('Please choose an image first.', true); return; }
+      result = await window.generationsApi.imageToVideo(file, {
+        motionPrompt: document.getElementById('img-motion-prompt').value,
+        cameraMovement: document.getElementById('img-camera-select').value,
+        duration: document.getElementById('img-duration-select').value,
+      });
+    } else if(tab==='script'){
+      result = await window.generationsApi.scriptToVideo({
+        title: document.getElementById('script-title').value || 'Untitled Script Video',
+        script: document.getElementById('script-body').value,
+        voiceStyle: document.getElementById('script-voicestyle').value,
+        visualStyle: document.getElementById('script-visualstyle').value,
+        music: document.getElementById('script-music').value,
+        subtitleStyle: document.getElementById('script-subtitle').value,
+      });
+    }
+
+    activeJobId = result.jobId;
+    const finalJob = await window.generationsApi.pollJob(result.jobId, (job)=>{
+      if(cancelRequested) return;
+      setGenStageUI(job.stage, job.progress);
+    });
+
+    if(cancelRequested) return;
+
+    if(finalJob.status === 'completed'){
+      overlay.style.display='none';
+      await showResult(finalJob);
+      loadDashboard(); loadProjects();
+    } else {
+      overlay.style.display='none';
+      showToast(finalJob.error || 'Generation failed. Your credits were refunded.', true);
+      loadDashboard();
+    }
+  }catch(err){
+    overlay.style.display='none';
+    toastError(err);
+  }
+}
+
+async function showResult(job){
+  try{
+    const { url } = await window.assetsApi.downloadUrl(job.resultAssetId);
+    const modal = document.getElementById('result-modal');
+    let videoEl = modal.querySelector('video.result-video');
+    if(!videoEl){
+      videoEl = document.createElement('video');
+      videoEl.className = 'result-video w-full rounded-xl mb-1';
+      videoEl.controls = true;
+      modal.querySelector('.scan-frame').replaceWith(videoEl);
+    }
+    videoEl.src = url;
+    modal.querySelector('button.btn-primary.btn-sm').onclick = ()=>window.open(url,'_blank');
+    openModal('result-modal');
+  }catch(err){ toastError(err); }
+}
+
+async function cancelGeneration(){
+  cancelRequested = true;
+  document.getElementById('gen-overlay').style.display='none';
+  if(activeJobId){
+    try{ await window.generationsApi.cancelJob(activeJobId); showToast('Generation canceled, credits refunded.'); loadDashboard(); }
+    catch(err){ /* job may have already completed */ }
+  }
+}
+
+async function generateAvatarVideo(){
+  if(!selectedAvatarId){ showToast('Choose an avatar first.', true); return; }
+  const overlay = document.getElementById('gen-overlay');
+  document.querySelectorAll('.gen-stage').forEach(s=>s.classList.remove('active','done'));
+  overlay.style.display='flex';
+  cancelRequested = false;
+  try{
+    const result = await window.generationsApi.avatarVideo({
+      avatarId: selectedAvatarId,
+      script: document.getElementById('avatar-script').value,
+      language: document.getElementById('avatar-language').value,
+      voiceId: document.getElementById('avatar-voice').value || undefined,
+    });
+    activeJobId = result.jobId;
+    const finalJob = await window.generationsApi.pollJob(result.jobId, (job)=>{ if(!cancelRequested) setGenStageUI(job.stage, job.progress); });
+    overlay.style.display='none';
+    if(cancelRequested) return;
+    if(finalJob.status==='completed'){ await showResult(finalJob); loadDashboard(); loadProjects(); }
+    else showToast(finalJob.error || 'Generation failed. Credits refunded.', true);
+  }catch(err){ overlay.style.display='none'; toastError(err); }
+}
+
+async function generateVoiceover(){
+  const overlay = document.getElementById('gen-overlay');
+  document.querySelectorAll('.gen-stage').forEach(s=>s.classList.remove('active','done'));
+  overlay.style.display='flex';
+  cancelRequested = false;
+  try{
+    const result = await window.generationsApi.voiceover({
+      text: document.getElementById('voice-text').value,
+      language: document.getElementById('voice-language').value,
+      accent: document.getElementById('voice-accent').value,
+      speed: parseInt(document.getElementById('voice-speed').value,10),
+      pitch: parseInt(document.getElementById('voice-pitch').value,10),
+    });
+    activeJobId = result.jobId;
+    const finalJob = await window.generationsApi.pollJob(result.jobId, (job)=>{ if(!cancelRequested) setGenStageUI(job.stage, job.progress); });
+    overlay.style.display='none';
+    if(cancelRequested) return;
+    if(finalJob.status==='completed'){
+      const { url } = await window.assetsApi.downloadUrl(finalJob.resultAssetId);
+      showToast('Voiceover ready — opening download.');
+      window.open(url,'_blank');
+      loadDashboard();
+    } else showToast(finalJob.error || 'Generation failed. Credits refunded.', true);
+  }catch(err){ overlay.style.display='none'; toastError(err); }
+}
+
+/* ================= MODALS ================= */
+function openModal(id){ document.getElementById(id).style.display='flex'; }
+function closeModal(id){ document.getElementById(id).style.display='none'; }
+function openAuth(mode){ switchAuth(mode); clearAuthError(); openModal('auth-modal'); }
+function switchAuth(mode){
+  clearAuthError();
+  ['login','signup','forgot'].forEach(m=>document.getElementById('auth-'+m).classList.toggle('hidden', m!==mode));
+}
+function clearAuthError(){
+  document.querySelectorAll('.auth-error').forEach(e=>e.remove());
+}
+function showAuthError(containerId, message){
+  clearAuthError();
+  const container = document.getElementById(containerId);
+  const div = document.createElement('div');
+  div.className = 'auth-error text-xs mb-4 px-3 py-2 rounded-lg';
+  div.style.cssText = 'background:rgba(255,61,99,.1); border:1px solid rgba(255,61,99,.3); color:#ff8fa3;';
+  div.innerText = message;
+  container.insertBefore(div, container.firstChild.nextSibling);
+}
+document.getElementById('auth-modal').addEventListener('click', e=>{ if(e.target.id==='auth-modal') closeModal('auth-modal'); });
+document.getElementById('result-modal').addEventListener('click', e=>{ if(e.target.id==='result-modal') closeModal('result-modal'); });
+
+async function submitLogin(){
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if(!email || !password){ showAuthError('auth-login', 'Enter your email and password.'); return; }
+  try{
+    const { user } = await window.authApi.login(email, password);
+    currentUser = user;
+    closeModal('auth-modal');
+    enterApp();
+  }catch(err){ showAuthError('auth-login', err.message || 'Login failed.'); }
+}
+async function submitSignup(){
+  const name = document.getElementById('signup-name').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+  if(!name || !email || !password){ showAuthError('auth-signup', 'Fill in all fields.'); return; }
+  try{
+    const { user } = await window.authApi.register(name, email, password);
+    currentUser = user;
+    closeModal('auth-modal');
+    enterApp();
+  }catch(err){ showAuthError('auth-signup', err.message || 'Sign up failed.'); }
+}
+async function submitForgot(){
+  const email = document.getElementById('forgot-email').value.trim();
+  if(!email){ showAuthError('auth-forgot', 'Enter your email.'); return; }
+  try{
+    await window.authApi.forgotPassword(email);
+    showAuthError('auth-forgot', 'If that email exists, a reset link has been sent.');
+  }catch(err){ showAuthError('auth-forgot', err.message || 'Something went wrong.'); }
+}
+
+/* ================= BOOT ================= */
+(async function boot(){
+  const loggedIn = await checkSession();
+  if(loggedIn){ enterApp(); }
+})();
+
+/* ================= HERO STAGE ROTATOR (decorative marketing preview only) ================= */
+const heroStages = ["ANALYZING PROMPT","GENERATING SCENES","CREATING VISUALS","ADDING MOTION","RENDERING VIDEO","FINALIZING"];
+let hIdx = 0;
+setInterval(()=>{ hIdx = (hIdx+1)%heroStages.length; document.getElementById('hero-stage').innerText = heroStages[hIdx]; }, 1600);
+
+/* ================= SCROLL REVEAL ================= */
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); });
+},{threshold:0.15});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
